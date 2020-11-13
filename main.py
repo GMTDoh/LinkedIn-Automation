@@ -68,7 +68,7 @@ class LinkedinBot:
         connect.click()
         
         time.sleep(2)
-        
+         
         ### Here is where we need to put in the code to add the message
             ### We would use the "send_key" function in order to do this
         self.driver.find_element_by_class_name('ml1').click()
