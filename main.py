@@ -1,35 +1,28 @@
 import time
-from csv import reader
+import csv
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
-# We need to import a CSV with the names, profile, URL, or something else that can distinguish who we are trying to find
-    # We could use the LinkedIn URL as it's the easiest to find, then use the class element of the name on the LinkedIn profile to personalize the message
-    # The month used in the personalized message could be difficul, but could also be taken from the CSV file
-# Finding a way to iterate through the entire CSV file might be a challenge as currently this only iterates a single time
-    # This is something that wil be decently easy to solve and should be done towards the end
 
 class LinkedinBot:
-    def __init__(self, username, password):
+    def __init__(self, username, password, note, profile_url):
         """ Initialized Chromedriver, sets common urls, username and password for user """
 
-        self.driver = webdriver.Chrome('./chromedriver.exe')
+        self.driver = webdriver.Chrome('/Users/georgedoherty/Desktop/chromedriver')
 
         self.base_url = 'https://www.linkedin.com'
         self.login_url = self.base_url + '/login'
         
-        # this can add specific text into the search bar if we want to look something up
-            # we can save this for later
-            # could be used for companies
         self.feed_url = self.base_url + '/feed'
         
-        # this is the specific link that we will use to get to certain profiles
-        self.profile_url = link
         
-        # username & password is defined below and will be inputted when the code is run - this could be personalized with whoever is using it 
-            # This means that anyone could use the program
+        
+        self.profile_url = profile_url
+        
+        
         self.username = username
         self.password = password
+        self.note = note
 
     def _nav(self, url):
         self.driver.get(url)
@@ -44,13 +37,11 @@ class LinkedinBot:
         # Looks for button that contains the text "Sign in" and clicks it
         self.driver.find_element_by_xpath("//button[contains(text(), 'Sign in')]").click()
 
-        # This code could be used to make a post (I found it from an open source code on GitHub)
-            # This isn't something we need right now, but commenting it out instead of deleting it seemed more appropriate
-    # def post(self, text):
-        # """ Make a text post """
-        # self.driver.find_element_by_class_name('share-box__open').click()
-        # self.driver.find_element_by_class_name('mentions-texteditor__content').send_keys(text)
-        # self.driver.find_element_by_class_name('share-actions__primary-action').click()
+    def post(self, text):
+        """ Make a text post """
+        self.driver.find_element_by_class_name('share-box__open').click()
+        self.driver.find_element_by_class_name('mentions-texteditor__content').send_keys(text)
+        self.driver.find_element_by_class_name('share-actions__primary-action').click()
     
     def search(self, text, connect=False):
         # If connect=True, the code will connect with the first person it finds from that search
@@ -69,7 +60,6 @@ class LinkedinBot:
 
     def _search_connect(self):
         # An underscore in the beginning declares this to be a private method - doesn't run unless it is called
-        # this is for the previous search method - might not be used
         """ Called after search method to send connections to all on page """
 
         connect = self.driver.find_element_by_class_name('search-result__action-button')
@@ -79,74 +69,67 @@ class LinkedinBot:
         
         self.driver.find_element_by_class_name('ml1').click()
         
-    def profile_connect(self, connect=False):
-        # searches for specific profiles to connect with them
+    def profile_connect(self, note, connect=False):
         self._nav(self.profile_url)
         
         # Waiting for search results to load
         time.sleep(3)
         
         if connect:
-            self._search_connect_message
+        	self._search_connect_message()
             
-     def _search_connect_message(self):
-        # this is for when we want to send a personal message intvitation
-        """ Called after search method to send connections to all on page """
+    def _search_connect_message(self):
+        # this is for when we want to send a personal message invitation
 
-        connect = self.driver.find_element_by_id('ember587')
+        connect = self.driver.find_element_by_class_name('ml2')
         connect.click()
         # here is where the pop-up comes up asking if we want to add a personal message
         
         time.sleep(2)
         
         # mr1 is the class name for the "Add a note" button
-        self.driver.find_element_by_class_name('mr1').click()
+        # "Add a note" xpath: /html/body/div[4]/div/div/div[3]/button[1]/span
+        
+       	add_note_button = self.driver.find_element_by_xpath("/html/body/div[4]/div/div/div[3]/button[1]/span")
+       	add_note_button.click()
         
         time.sleep(2)
         
-        # custom-message is the ID name for the message-text box
-        # message is the variable we are assigning to our personalized note
-        # not entirely sure if this is the correct method for adding text, but I am searching for different to find elements
-        self.driver.find_element_by_id('custom-message').send_keys(message)
+        # This adds the note in the personal invitation
+        self.driver.find_element_by_id('custom-message').click()
+        self.driver.find_element_by_id('custom-message').send_keys(self.note)
+        
         
         time.sleep(4)
         
         # ml1 is the class name for the "Send" button after we have written a message
-        self.driver.find_element_by_class_name('ml1').click()
+        send_button = self.driver.find_element_by_xpath("/html/body/div[4]/div/div/div[3]/button[2]/span")
+        send_button.click()
+
         
 if __name__ == '__main__':    
+    # the iteration loop would go here, cannot go up at the top
+    username = 'george.doherty20@gmail.com'
+    password = '577Raygl'
+    note = 'Hey Charles, this was sent to you through my automation!'
+    profile_url = "https://www.linkedin.com/in/solomoncharles/"
+    bot = LinkedinBot(username, password, note, profile_url)
+    bot.login(username, password)
+    bot.profile_connect(note, connect=True)
     
-    username = ''
-    password = ''
-    message = ''
     
-    bot = LinkedinBot(username, password)
+    #profiles = []
+    #f = open('LIA.csv')
+    #csv_f = csv.reader(f)
+    #for row in csv_f:
+    	#profiles.append(str(row[0]))
     
-    # iterate over each line as a ordered dictionary and use certain columns as needed
-    # this is the main iteration that we go through for the linked in profiles
-    with open('LIA.csv', 'r') as linkedin_csv:
-        linkedin_profiles_csv = DictReader(linkedin_csv)
-        for row in linkedin_profiles_csv:
-            link = row['Link']
+	
+    
+    
+    
+    
+    
+    
+    # "https://www.linkedin.com/in/xavier-kelley/"
             
-            bot.login(username, password)
-            bot.profile_search(connect=True)
-            
-    
-    #The methods used to call certain objects and to run certain codes will need to be looked over to make sure it is all running smoothly
-    
-    # post_text = ''
-    # search_text is used to distinguish the text parameter from the "post" function and the "search" function
-    # search_text = ''
-    
-    # bot.search(search_text, connect=True)
-    
-    # bot.post(post_text)
-    
-    
-    # General Notes
-        # the connect button on a specific LinkedIn:
-            # profile ID: "ember587"
-            # class: ml2
-            
-    
